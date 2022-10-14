@@ -15,8 +15,12 @@ class FastInferenceInterface:
 
     async def on_message(self, msg):
         instruction = json.loads(msg.data.decode("utf-8"))
+        print(instruction)
+        instruction['args']['prompt'] = instruction['prompt']
+        instruction['args']['seed'] = instruction['seed']
         job_id = instruction['id']
-        self.infer(job_id, instruction)
+
+        self.infer(job_id, instruction['args'])
         
     def on_error(self, ws, msg):
         print(msg)

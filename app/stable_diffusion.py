@@ -6,11 +6,14 @@ from random import randint
 from typing import Dict
 import matplotlib.pyplot as plt
 import requests
-
-sys.path.append("./")
-from common.fast_inference import FastInferenceInterface
 from diffusers import StableDiffusionPipeline
 import torch
+from PIL import Image
+from io import BytesIO
+
+sys.path.append("./")
+from common import FastInferenceInterface
+
 
 class FastStableDiffusion(FastInferenceInterface):
     def __init__(self, model_name: str, args=None) -> None:
@@ -40,12 +43,19 @@ class FastStableDiffusion(FastInferenceInterface):
             generator = self.generator,
             device = "cuda"
         )
+        init_image=None
+        if 'url' in args:
+            response = requests.get(args['url'])
+            init_image = Image.open(BytesIO(response.content)).convert("RGB")
+            init_image = init_image.resize((768, 512))
+
         start = time.time()
         with torch.autocast("cuda"):
             image = self.pipe(
-                [args['input']] * 1,
+                [args['prompt']] * 1,
                 guidance_scale=7.5,
                 latents = latents,
+                init_image=init_image
             )["sample"][0]
         end = time.time()
         # save images to file
