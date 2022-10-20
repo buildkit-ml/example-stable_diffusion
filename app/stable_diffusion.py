@@ -29,6 +29,7 @@ class FastStableDiffusion(FastInferenceInterface):
     def infer(self, job_id, args) -> Dict:
         coord_url = os.environ.get("COORDINATOR_URL", "localhost:8092/my_coord")
         worker_name = os.environ.get("WORKER_NAME", "planetv2")
+        upload_token = os.environ.get("UPLOAD_TOKEN", "token")
         res = requests.patch(
             f"http://{coord_url}/api/v1/g/jobs/atomic_job/{job_id}",
             json={
@@ -37,36 +38,35 @@ class FastStableDiffusion(FastInferenceInterface):
         )
         
         self.generator.manual_seed(args['seed'])
+        strength = 0.8
+        guidance_scale = 7.5
 
-        latents = torch.randn(
-            (1, self.pipe.unet.in_channels, 512 // 8, 512 // 8),
-            generator = self.generator,
-            device = "cuda"
-        )
-        init_image=None
-        if 'url' in args:
-            response = requests.get(args['url'])
-            init_image = Image.open(BytesIO(response.content)).convert("RGB")
-            init_image = init_image.resize((768, 512))
+        if 'strength' in args:
+            strength = args['strength']
+        
+        if 'guidance_scale' in args:
+            guidance_scale = args['guidance_scale']
 
         start = time.time()
         with torch.autocast("cuda"):
             image = self.pipe(
-                [args['prompt']] * 1,
-                guidance_scale=7.5,
-                latents = latents,
-                init_image=init_image
-            )["sample"][0]
+                prompt=args['prompt'],
+                strength=strength,
+                guidance_scale=guidance_scale,
+                generator=self.generator,
+            ).images[0]
         end = time.time()
         # save images to file
         fileid = randint(0, 100000)
-        image.save(f"image_{fileid}.png")
+        image.save(f"/app/results/image_{fileid}.png")
         # upload images to s3
-        with open(f"image_{fileid}.png", "rb") as fp:
+        with open(f"/app/results/image_{fileid}.png", "rb") as fp:
             files = {"file": fp}
-            res = requests.post("https://planetd.shift.ml/file", files=files).json()
+            res = requests.post("https://api.together.xyz/file", files=files, headers={
+                "together-token": upload_token
+            }).json()
             filename=res["filename"]
-        os.remove(f"image_{fileid}.png")
+        os.remove(f"/app/results/image_{fileid}.png")
         # delete the file
         print("sending requests to global")
         # write results back

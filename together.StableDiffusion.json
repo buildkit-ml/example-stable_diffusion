@@ -6,8 +6,8 @@
         "bash": "/bin/bash"
     },
     "bind": {
-        "/model": "/root/.cache/huggingface/diffusers/models--CompVis--stable-diffusion-v1-4/",
-        "/app/results": "/root/toma/buildkit/examples/stable_diffusion/tmp" 
+        "/model":"/root/.cache/huggingface/diffusers/models--CompVis--stable-diffusion-v1-4/",
+        "/app/results":"tmp"
     },
     "nvidia": true
 }

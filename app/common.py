@@ -4,7 +4,7 @@ from typing import Dict
 import json
 import nats
 from nats.errors import ConnectionClosedError, NoServersError, TimeoutError
-
+import traceback
 
 class FastInferenceInterface:
     def __init__(self, model_name: str, args=None) -> None:
@@ -15,13 +15,15 @@ class FastInferenceInterface:
 
     async def on_message(self, msg):
         instruction = json.loads(msg.data.decode("utf-8"))
-        print(instruction)
+        instruction['args'] = json.loads(instruction['args'])
         instruction['args']['prompt'] = instruction['prompt']
         instruction['args']['seed'] = instruction['seed']
         job_id = instruction['id']
-
-        self.infer(job_id, instruction['args'])
-        
+        try: 
+            self.infer(job_id, instruction['args'])
+        except Exception as e:
+            traceback.print_exc()
+            print("error in inference: "+str(e))
     def on_error(self, ws, msg):
         print(msg)
 

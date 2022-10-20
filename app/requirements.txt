@@ -7,3 +7,4 @@ loguru
 rel
 nats-py
 diffusers
+transformers
