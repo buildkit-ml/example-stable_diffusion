@@ -65,6 +65,7 @@ class FastStableDiffusion(FastInferenceInterface):
             res = requests.post("https://api.together.xyz/file", files=files, headers={
                 "together-token": upload_token
             }).json()
+            print(res)
             filename=res["filename"]
         os.remove(f"/app/results/image_{fileid}.png")
         # delete the file
@@ -75,7 +76,7 @@ class FastStableDiffusion(FastInferenceInterface):
             json={
                 "status": "finished",
                 "output": {
-                    "output": filename,
+                    "choices": filename,
                     "cal_time": end - start,
                 },
                 "processed_by": worker_name,

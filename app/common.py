@@ -18,12 +18,16 @@ class FastInferenceInterface:
         instruction['args'] = json.loads(instruction['args'])
         instruction['args']['prompt'] = instruction['prompt']
         instruction['args']['seed'] = instruction['seed']
-        job_id = instruction['id']
-        try: 
-            self.infer(job_id, instruction['args'])
-        except Exception as e:
-            traceback.print_exc()
-            print("error in inference: "+str(e))
+        for job_id, prompt in zip(instruction['id'], instruction['prompt']):
+            query = instruction['args']
+            query['prompt'] = prompt
+            query['seed'] = instruction['seed']
+            try: 
+                self.infer(job_id, query)
+            except Exception as e:
+                traceback.print_exc()
+                print("error in inference: "+str(e))
+                
     def on_error(self, ws, msg):
         print(msg)
 
