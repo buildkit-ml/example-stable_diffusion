@@ -19,9 +19,7 @@ class FastStableDiffusion(FastInferenceInterface):
     def __init__(self, model_name: str, args=None) -> None:
         super().__init__(model_name, args)
         self.pipe = StableDiffusionPipeline.from_pretrained(
-            "CompVis/stable-diffusion-v1-4",
-            revision="fp16", 
-            torch_dtype=torch.float16,
+            "/model",
         )
         self.pipe = self.pipe.to("cuda")
         self.generator = torch.Generator(device="cuda")
